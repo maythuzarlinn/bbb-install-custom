@@ -1,8 +1,5 @@
 #!/bin/bash -ex
 
-# New default: disable SSL unless explicitly enabled
-ENABLE_SSL=false
-
 # Copyright (c) 2025 BigBlueButton Inc.
 #
 # This program is free software; you can redistribute it and/or modify it under the
@@ -122,12 +119,6 @@ HERE
 }
 
 main() {
-  # Auto-detect public IP if -s not provided
-  if [ -z "$HOST" ]; then
-    HOST=$(curl -s https://ipinfo.io/ip)
-    echo "Auto-detected public IP: $HOST"
-  fi
-
   export DEBIAN_FRONTEND=noninteractive
   PACKAGE_REPOSITORY=ubuntu.bigbluebutton.org
   LETS_ENCRYPT_OPTIONS=(--webroot --non-interactive)
@@ -346,18 +337,11 @@ main() {
     ln -s "$LINK_PATH" "/var/bigbluebutton"
   fi
 
-  if [ "$ENABLE_SSL" = true ]; then
-    echo "SSL setup enabled, installing Let's Encrypt certificate..."
-    if [ -n "$PROVIDED_CERTIFICATE" ]; then
-        install_ssl
-    elif [ -n "$HOST" ] && [ -n "$EMAIL" ]; then
-        install_ssl
-    else
-        echo "SSL requested but missing HOST or EMAIL. Skipping SSL setup."
-    fi
-else
-    echo "Skipping SSL setup by default. Use --enable-ssl to enable it."
-fi
+  if [ -n "$PROVIDED_CERTIFICATE" ] ; then
+    install_ssl
+  elif [ -n "$HOST" ] && [ -n "$EMAIL" ] ; then
+    install_ssl
+  fi
 
   if [ -n "$COTURN" ]; then
     configure_coturn
